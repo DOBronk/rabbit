@@ -1,0 +1,26 @@
+{
+    "name": "dbronk/rabbit",
+    "description": "Rabbit MQ processor",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Dbronk\\Rabbit\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Dennis Bronk",
+            "email": "dbronk2@gmail.com"
+        }
+    ],
+    "require": {
+        "php-amqplib/php-amqplib": "^3.2",
+        "symfony/http-client": "^7.2",
+        "ext-pdo": "*"
+    },
+    "config": {
+        "allow-plugins": {
+            "symfony/flex": true
+        }
+    }
+}
