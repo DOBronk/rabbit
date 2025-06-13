@@ -1,6 +1,6 @@
 <?php
 
-namespace Dbronk\Rabbit;
+namespace Dbronk\Rabbit\DTO;
 
 class JobDTO
 {

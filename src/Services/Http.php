@@ -1,8 +1,9 @@
 <?php
 
-namespace Dbronk\Rabbit;
+namespace Dbronk\Rabbit\Services;
 
 use Symfony\Component\HttpClient\HttpClient;
+
 class Http
 {
     public static function post(string $url, array $vars = [])
