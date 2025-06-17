@@ -15,13 +15,12 @@ class Worker
 {
     private int $failures = 0;
 
-    public function __construct(private readonly Settings $settings, private readonly int $fail_max)
+    public function __construct(private readonly Settings $settings, private readonly int $fail_max, private readonly OllamaService $ollama)
     {
     }
 
     public function start(): void
     {
-        $ollama = new OllamaService($this->settings->ollama()->host, $this->settings->ollama()->port);
         try {
             $connection = new AMQPStreamConnection(
                 $this->settings->rabbitMq()->hostname,
@@ -40,7 +39,7 @@ class Worker
 
         echo Logger::log(" [*] Worker is waiting for jobs. To exit press CTRL+C\n");
 
-        $callback = function ($msg) use ($ollama) {
+        $callback = function ($msg)  {
             try {
                 $task = JobDTO::fromJson($msg->body);
             } catch (Exception $e) {
@@ -54,7 +53,7 @@ class Worker
             echo Logger::log(" [x] Received job, item id:  $task->jobItemId\n");
 
             try {
-                $response = $ollama->findIssues($task->payload);
+                $response = $this->ollama->findIssues($task->payload);
             } catch (Exception $e) {
                 $status = 2;
                 echo Logger::log(" [x] Job failed on ollama API, assigning status code 2. Exception message: {$e->getMessage()}\n");

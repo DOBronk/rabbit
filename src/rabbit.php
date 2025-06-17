@@ -6,6 +6,7 @@ use Dbronk\Rabbit\Services\DbService;
 use Dbronk\Rabbit\Utilities\Settings;
 use Dbronk\Rabbit\Worker;
 use Dbronk\Rabbit\Utilities\Logger;
+use Dbronk\Rabbit\Services\OllamaService;
 
 // Settings filename
 const settingsfilename = 'settings.ini';
@@ -23,5 +24,5 @@ try {
 
 DbService::setSettings($settings->database());
 
-$work = new Worker($settings, max_fail);
+$work = new Worker($settings, max_fail, new OllamaService($settings->ollama()->host, $settings->ollama()->port));
 $work->start();
