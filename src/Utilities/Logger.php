@@ -7,11 +7,7 @@ class Logger
 
     public static function log($message): string
     {
-        try {
-            $stream = fopen(self::file, "a+");
-        } catch (\Exception $e) {
-
-        }
+        $stream = fopen(self::file, "a+");
 
         if ($stream !== false) {
             try {
