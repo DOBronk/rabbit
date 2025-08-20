@@ -4,16 +4,16 @@ namespace Dbronk\Rabbit\Services;
 
 class OllamaService
 {
-    public function __construct(private readonly string $host, private readonly int $port)
-    {
-    }
+    public function __construct(private readonly string $host, private readonly int $port) {}
 
     public function findIssues(string $code)
     {
         $response = json_decode(Http::post("http://$this->host:$this->port/api/generate", [
-            'model' => 'qwen2.5-coder:14b',
-            'prompt' => "can you tell me if this code uses proper SOLID and DRY principles and return the output as json using the following keys: SRP for Single Responsibility Principle, OCP for Open/Closed Principle, LSP for Liskov Substitution Principle, ISP for Interface Segregation Principle, DIP for Dependency Inversion Principle and DRY for DRY Principle." .
-                ": {$code}",
+            'model' => 'devstral:latest', // 'qwen2.5-coder:14b',
+            'prompt' => 'Review this code for SOLID and DRY practises. Format your response in JSON and use'.
+                ' SRP, OCP, LSP, ISP, DIP and DRY as attributes. If there are problems set the attribute to a string with improvements, '.
+                "else if no problems or if not applicable to the code set the attribute to integer value 1.\n\n{$code}",
+
             'format' => 'json',
             'stream' => false,
         ])->getContent(), true);

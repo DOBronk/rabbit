@@ -8,16 +8,27 @@ use PDO;
 class DbService
 {
     private PDO $pdo;
+
     private static DbService $instance;
-    private string $jobitems = "codeanalyzer_job_items";
-    private string $jobs = "codeanalyzer_jobs";
+
+    private string $jobitems = 'codeanalyzer_job_items';
+
+    private string $jobs = 'codeanalyzer_jobs';
+
     private static DatabaseSettings $settings;
+
+    private function makeDSO(): PDO
+    {
+        return new PDO(
+            'mysql:host='.self::$settings->host.';dbname='.self::$settings->database.';port='.self::$settings->port,
+            self::$settings->user,
+            self::$settings->password
+        );
+    }
 
     public function __construct()
     {
-        $this->pdo = new PDO("mysql:host=" . self::$settings->host . ";dbname=" . self::$settings->database . ";port=" . self::$settings->port,
-            self::$settings->user,
-            self::$settings->password);
+        $this->pdo = $this->makeDSO();
     }
 
     public static function setSettings(DatabaseSettings $settings): void
@@ -33,18 +44,20 @@ class DbService
 
     /**
      * Return singleton
-     * @return DbService
      */
     public static function getInstance(): DbService
     {
-        if (!isset(self::$instance)) {
-            self::$instance = new DbService();
+        if (! isset(self::$instance)) {
+            self::$instance = new DbService;
+        }
+        if (! self::$instance->pdo->query('SELECT 1')) {
+            self::$instance = new DbService;
         }
 
         return self::$instance;
     }
 
-    private function compareItem(int $id, int $status, string $result = ""): bool
+    private function compareItem(int $id, int $status, string $result = ''): bool
     {
         $query = $this->pdo->prepare("SELECT * FROM $this->jobitems WHERE id = :id");
         $query->execute([':id' => $id]);
@@ -54,10 +67,11 @@ class DbService
                 return true;
             }
         }
+
         return false;
     }
 
-    public function updateItem(int $id, int $status, int $jobid, string $result = ""): bool
+    public function updateItem(int $id, int $status, int $jobid, string $result = ''): bool
     {
         if ($this->compareItem($id, $status, $result)) {
             // Same data already exists in database
@@ -66,19 +80,17 @@ class DbService
         $query = $this->pdo->prepare("UPDATE $this->jobitems SET status_id = :status_id, results = :result WHERE id = :id");
         $query->execute([':status_id' => $status, ':result' => $result, ':id' => $id]);
         $this->jobItemsFinished($jobid);
+
         // Return false when no row affected
         return $query->rowCount() > 0;
     }
 
-    public function jobStatus(int $jobid): int
+    public function jobActive(int $jobid): bool
     {
         $status = $this->pdo->prepare("SELECT active FROM $this->jobs WHERE id = $jobid");
         $status->execute();
-        if($status->rowCount() > 0){
-           return $status->fetch()[0];
-        }
 
-        return 0;
+        return $status->fetch()[0] == 1;
     }
 
     private function jobItemsFinished(int $jobid): void

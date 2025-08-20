@@ -5,13 +5,12 @@ namespace Dbronk\Rabbit\Utilities;
 class Settings
 {
     private DatabaseSettings $database;
+
     private RabbitMqSettings $rabbitMq;
+
     private OllamaSettings $ollama;
 
-    public function __construct()
-    {
-
-    }
+    public function __construct() {}
 
     public function parse_ini(string $filename)
     {
@@ -55,8 +54,8 @@ class Settings
         return $this->ollama;
     }
 
-    function array_keys_exists(array $keys, array $arr)
+    public function array_keys_exists(array $keys, array $arr)
     {
-        return !array_diff_key(array_flip($keys), $arr);
+        return ! array_diff_key(array_flip($keys), $arr);
     }
 }

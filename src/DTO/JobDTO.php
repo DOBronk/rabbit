@@ -9,8 +9,7 @@ class JobDTO
         public readonly int $userId,
         public readonly int $jobItemId,
         public readonly string $payload
-    ) {
-    }
+    ) {}
 
     public static function fromArray(array $array): JobDTO
     {
@@ -20,8 +19,10 @@ class JobDTO
     public static function fromJson(string $json): JobDTO
     {
         $array = json_decode($json, true);
+
         return self::fromArray($array);
     }
+
     public function toJson(): string
     {
         return json_encode($this);

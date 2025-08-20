@@ -15,7 +15,7 @@ class Http
             $url,
             [
                 'timeout' => 900,   // 15 minuten
-                'json' => $vars
+                'json' => $vars,
             ]
         );
     }

@@ -3,15 +3,15 @@
 require '../vendor/autoload.php';
 
 use Dbronk\Rabbit\Services\DbService;
+use Dbronk\Rabbit\Services\OllamaService;
+use Dbronk\Rabbit\Utilities\Logger;
 use Dbronk\Rabbit\Utilities\Settings;
 use Dbronk\Rabbit\Worker;
-use Dbronk\Rabbit\Utilities\Logger;
-use Dbronk\Rabbit\Services\OllamaService;
 
 // Settings filename
 const settingsfilename = 'settings.ini';
 
-$settings = new Settings();
+$settings = new Settings;
 // Maximum number of consecutive database errors before shutting worker down, 0 = unlimited/disabled
 const max_fail = 3;
 

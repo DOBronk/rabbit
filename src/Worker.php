@@ -15,9 +15,7 @@ class Worker
 {
     private int $failures = 0;
 
-    public function __construct(private readonly Settings $settings, private readonly int $fail_max, private readonly OllamaService $ollama)
-    {
-    }
+    public function __construct(private readonly Settings $settings, private readonly int $fail_max, private readonly OllamaService $ollama) {}
 
     public function start(): void
     {
@@ -33,40 +31,49 @@ class Worker
             // Persistent queue channel
             $channel->queue_declare($this->settings->rabbitMq()->queue, false, true, false, false);
         } catch (Exception $exception) {
-            echo Logger::log("Fatal error! Exception: " . $exception->getMessage());
+            echo Logger::log('Fatal error! Exception: '.$exception->getMessage());
             exit();
         }
 
         echo Logger::log(" [*] Worker is waiting for jobs. To exit press CTRL+C\n");
 
-        $callback = function ($msg)  {
+        $callback = function ($msg) {
+
             try {
                 $task = JobDTO::fromJson($msg->body);
             } catch (Exception $e) {
                 echo Logger::log(" [x] Received invalid message, deleting from queue. Exception message: {$e->getMessage()}\n");
-                Logger::log('Message body: ' . $msg->body);
-                $msg->ack();
+                Logger::log('Message body: '.$msg->body);
+
                 return;
             }
 
-            $status = 1;
-            echo Logger::log(" [x] Received job, item id:  $task->jobItemId\n");
+            if (! DbService::getInstance()->jobActive($task->id)) {
+                echo Logger::log("Job is not active or cancalled, skipping\n");
+                $msg->ack();
 
+                return;
+            }
+
+            echo Logger::log(" [x] Received job, item id:  $task->jobItemId\n");
             try {
                 $response = $this->ollama->findIssues($task->payload);
             } catch (Exception $e) {
                 $status = 2;
                 echo Logger::log(" [x] Job failed on ollama API, assigning status code 2. Exception message: {$e->getMessage()}\n");
+                DbService::getInstance()->updateItem($task->jobItemId, 2, $task->id);
             }
 
             try {
                 $echo = ' [x] Job completed successfully';
-                if (!DbService::getInstance()->updateItem($task->jobItemId, $status, $task->id, $response ?? '')) {
+
+                if (! DbService::getInstance()->updateItem($task->jobItemId, $status ?? 1, $task->id, $response ?? '')) {
                     $echo .= ', although no row was affected in database! Removing from pool (non existent id)';
                     $this->failures++;
                 } else {
                     $this->failures = 0;
                 }
+
                 $msg->ack();
                 echo Logger::log($echo), "\n";
             } catch (Exception $e) {
@@ -74,7 +81,7 @@ class Worker
                 $this->failures++;
             }
 
-            if ($this->fail_max > 0 && $this->failures >= $this->fail_max) {
+            if ($this->fail_max && $this->failures >= $this->fail_max) {
                 echo Logger::log('Fatal error: Too many consecutive database errors, shutting worker down!');
                 exit();
             }
@@ -89,5 +96,4 @@ class Worker
             echo Logger::log("Fatal error: {$exception->getMessage()}");
         }
     }
-
 }
